@@ -273,3 +273,107 @@ export interface OKRHierarchy extends ExecutionItem {
   features?: OKRHierarchy[];
   subFeatures?: OKRHierarchy[];
 }
+
+/**
+ * Configuration for sorting table columns displaying ExecutionItem data.
+ * 
+ * This interface provides type-safe table sorting configuration by constraining
+ * the column property to only valid ExecutionItem keys, ensuring compile-time
+ * type checking and preventing runtime errors from invalid column references.
+ * 
+ * The keyof ExecutionItem constraint means TypeScript will validate that only
+ * actual properties of ExecutionItem (id, name, owner, projectManager, health,
+ * team, type, description, createdAt, updatedAt) can be used as sort columns.
+ * 
+ * @interface TableSortConfig
+ * 
+ * @property {keyof ExecutionItem} column - The ExecutionItem property to sort by.
+ *   Must be a valid key of the ExecutionItem interface. TypeScript will enforce
+ *   this at compile time, preventing typos and invalid column references.
+ * 
+ * @property {'asc' | 'desc'} direction - Sort direction indicator.
+ *   - 'asc': Ascending order (A-Z, 0-9, oldest to newest)
+ *   - 'desc': Descending order (Z-A, 9-0, newest to oldest)
+ * 
+ * @example
+ * // Valid: Sort by name in ascending order
+ * const sortByName: TableSortConfig = {
+ *   column: 'name',
+ *   direction: 'asc'
+ * };
+ * 
+ * @example
+ * // Valid: Sort by health status in descending order
+ * const sortByHealth: TableSortConfig = {
+ *   column: 'health',
+ *   direction: 'desc'
+ * };
+ * 
+ * @example
+ * // Valid: Sort by creation date to show newest first
+ * const sortByNewest: TableSortConfig = {
+ *   column: 'createdAt',
+ *   direction: 'desc'
+ * };
+ * 
+ * @example
+ * // Valid: Sort by owner alphabetically
+ * const sortByOwner: TableSortConfig = {
+ *   column: 'owner',
+ *   direction: 'asc'
+ * };
+ * 
+ * @example
+ * // Valid: Sort by project manager
+ * const sortByPM: TableSortConfig = {
+ *   column: 'projectManager',
+ *   direction: 'asc'
+ * };
+ * 
+ * @example
+ * // Valid: Sort by team
+ * const sortByTeam: TableSortConfig = {
+ *   column: 'team',
+ *   direction: 'desc'
+ * };
+ * 
+ * @example
+ * // INVALID: TypeScript will catch this at compile time
+ * // Error: Type '"invalidColumn"' is not assignable to type 'keyof ExecutionItem'
+ * // const invalidSort: TableSortConfig = {
+ * //   column: 'invalidColumn',  // ❌ Compile error - not a valid ExecutionItem key
+ * //   direction: 'asc'
+ * // };
+ * 
+ * @example
+ * // INVALID: TypeScript will catch this at compile time
+ * // Error: Type '"ascending"' is not assignable to type '"asc" | "desc"'
+ * // const invalidDirection: TableSortConfig = {
+ * //   column: 'name',
+ * //   direction: 'ascending'  // ❌ Compile error - must be 'asc' or 'desc'
+ * // };
+ * 
+ * @example
+ * // Usage in a table sorting function
+ * function sortExecutionItems(
+ *   items: ExecutionItem[],
+ *   config: TableSortConfig
+ * ): ExecutionItem[] {
+ *   return [...items].sort((a, b) => {
+ *     const aValue = a[config.column];
+ *     const bValue = b[config.column];
+ *     
+ *     if (aValue === undefined || bValue === undefined) return 0;
+ *     
+ *     const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+ *     return config.direction === 'asc' ? comparison : -comparison;
+ *   });
+ * }
+ * 
+ * // Type-safe usage - TypeScript ensures valid column names
+ * const sorted = sortExecutionItems(items, { column: 'name', direction: 'asc' });
+ */
+export interface TableSortConfig {
+  column: keyof ExecutionItem;
+  direction: 'asc' | 'desc';
+}
