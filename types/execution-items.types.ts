@@ -90,3 +90,186 @@ export interface ExecutionItem {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+/**
+ * Represents the hierarchical structure of Objectives and Key Results (OKR) in the execution roadmap.
+ * 
+ * This interface extends ExecutionItem to support nested hierarchical relationships between:
+ * - Objectives (top level)
+ * - Key Results (children of Objectives)
+ * - Initiatives (children of Key Results)
+ * - Features (children of Initiatives)
+ * - Sub-Features (children of Features)
+ * 
+ * All hierarchical properties are optional, allowing for flexible representation of:
+ * - Complete multi-level hierarchies
+ * - Partial hierarchies at any level
+ * - Standalone items without children
+ * - Items without parent relationships
+ * 
+ * @interface OKRHierarchy
+ * @extends {ExecutionItem}
+ * 
+ * @property {OKRHierarchy[]} [keyResults] - Optional array of key results associated with an objective.
+ *   Each key result can itself have child initiatives, creating a nested structure.
+ * 
+ * @property {OKRHierarchy[]} [initiatives] - Optional array of initiatives associated with a key result.
+ *   Each initiative can have child features, enabling tactical planning under strategic goals.
+ * 
+ * @property {OKRHierarchy[]} [features] - Optional array of features associated with an initiative.
+ *   Each feature can have child sub-features, allowing detailed breakdown of functionality.
+ * 
+ * @property {OKRHierarchy[]} [subFeatures] - Optional array of sub-features associated with a feature.
+ *   Represents the most granular level of work breakdown in the hierarchy.
+ * 
+ * @example
+ * // Complete hierarchy: Objective -> Key Result -> Initiative -> Feature -> Sub-Feature
+ * const fullHierarchy: OKRHierarchy = {
+ *   id: 'obj-001',
+ *   name: 'Improve Platform Security',
+ *   owner: 'Security Team Lead',
+ *   projectManager: 'PM Alpha',
+ *   health: 'on-track',
+ *   team: 'Security Squad',
+ *   type: 'Objective',
+ *   keyResults: [
+ *     {
+ *       id: 'kr-001',
+ *       name: 'Implement Multi-Factor Authentication',
+ *       owner: 'Auth Engineer',
+ *       projectManager: 'PM Alpha',
+ *       health: 'on-track',
+ *       team: 'Security Squad',
+ *       type: 'Key Result',
+ *       initiatives: [
+ *         {
+ *           id: 'init-001',
+ *           name: 'SMS-based 2FA',
+ *           owner: 'Backend Dev',
+ *           projectManager: 'PM Alpha',
+ *           health: 'on-track',
+ *           team: 'Security Squad',
+ *           type: 'Initiative',
+ *           features: [
+ *             {
+ *               id: 'feat-001',
+ *               name: 'SMS Gateway Integration',
+ *               owner: 'Integration Specialist',
+ *               projectManager: 'PM Alpha',
+ *               health: 'at-risk',
+ *               team: 'Security Squad',
+ *               type: 'Feature',
+ *               subFeatures: [
+ *                 {
+ *                   id: 'subfeat-001',
+ *                   name: 'Twilio API Setup',
+ *                   owner: 'DevOps Engineer',
+ *                   projectManager: 'PM Alpha',
+ *                   health: 'on-track',
+ *                   team: 'Security Squad',
+ *                   type: 'Sub Feature'
+ *                 }
+ *               ]
+ *             }
+ *           ]
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * };
+ * 
+ * @example
+ * // Partial hierarchy: Objective with key results only (no deeper nesting)
+ * const objectiveWithKeyResults: OKRHierarchy = {
+ *   id: 'obj-002',
+ *   name: 'Increase User Engagement',
+ *   owner: 'Product Owner',
+ *   projectManager: 'PM Beta',
+ *   health: 'at-risk',
+ *   team: 'Growth Squad',
+ *   type: 'Objective',
+ *   keyResults: [
+ *     {
+ *       id: 'kr-002',
+ *       name: 'Boost Daily Active Users by 20%',
+ *       owner: 'Growth Lead',
+ *       projectManager: 'PM Beta',
+ *       health: 'at-risk',
+ *       team: 'Growth Squad',
+ *       type: 'Key Result'
+ *     },
+ *     {
+ *       id: 'kr-003',
+ *       name: 'Reduce Churn Rate to 5%',
+ *       owner: 'Retention Specialist',
+ *       projectManager: 'PM Beta',
+ *       health: 'on-track',
+ *       team: 'Growth Squad',
+ *       type: 'Key Result'
+ *     }
+ *   ]
+ * };
+ * 
+ * @example
+ * // Standalone feature without children or parent context
+ * const standaloneFeature: OKRHierarchy = {
+ *   id: 'feat-002',
+ *   name: 'Dark Mode Support',
+ *   owner: 'UI Developer',
+ *   projectManager: 'PM Gamma',
+ *   health: 'on-track',
+ *   team: 'UI Squad',
+ *   type: 'Feature',
+ *   description: 'Add system-wide dark mode toggle'
+ * };
+ * 
+ * @example
+ * // Initiative with features but no parent objective/key result
+ * const independentInitiative: OKRHierarchy = {
+ *   id: 'init-002',
+ *   name: 'Mobile App Optimization',
+ *   owner: 'Mobile Lead',
+ *   projectManager: 'PM Delta',
+ *   health: 'off-track',
+ *   team: 'Mobile Squad',
+ *   type: 'Initiative',
+ *   features: [
+ *     {
+ *       id: 'feat-003',
+ *       name: 'Reduce App Bundle Size',
+ *       owner: 'Mobile Engineer',
+ *       projectManager: 'PM Delta',
+ *       health: 'off-track',
+ *       team: 'Mobile Squad',
+ *       type: 'Feature'
+ *     },
+ *     {
+ *       id: 'feat-004',
+ *       name: 'Optimize Image Loading',
+ *       owner: 'Performance Engineer',
+ *       projectManager: 'PM Delta',
+ *       health: 'on-track',
+ *       team: 'Mobile Squad',
+ *       type: 'Feature'
+ *     }
+ *   ]
+ * };
+ * 
+ * @example
+ * // Empty hierarchy: ExecutionItem with no children defined
+ * const leafItem: OKRHierarchy = {
+ *   id: 'subfeat-002',
+ *   name: 'Update Documentation',
+ *   owner: 'Tech Writer',
+ *   projectManager: 'PM Epsilon',
+ *   health: 'on-track',
+ *   team: 'Documentation Squad',
+ *   type: 'Sub Feature'
+ * };
+ */
+export interface OKRHierarchy extends ExecutionItem {
+  keyResults?: OKRHierarchy[];
+  initiatives?: OKRHierarchy[];
+  features?: OKRHierarchy[];
+  subFeatures?: OKRHierarchy[];
+}
