@@ -377,3 +377,222 @@ export interface TableSortConfig {
   column: keyof ExecutionItem;
   direction: 'asc' | 'desc';
 }
+
+/**
+ * API response wrapper for execution items with optional pagination metadata.
+ * 
+ * This interface provides a standardized structure for API responses containing
+ * execution items, supporting both paginated and non-paginated response formats.
+ * The generic type parameter allows for flexibility in returning either flat
+ * ExecutionItem arrays or hierarchical OKRHierarchy structures.
+ * 
+ * The interface is designed to handle multiple API response patterns:
+ * - Simple responses with all data (no pagination)
+ * - Cursor-based pagination (using page/limit)
+ * - Offset-based pagination (using page/limit/totalPages)
+ * - Infinite scroll patterns (using hasMore flag)
+ * 
+ * @interface ExecutionItemsApiResponse
+ * @template T - The type of execution items in the response, must extend ExecutionItem.
+ *   Defaults to ExecutionItem if not specified, but can be OKRHierarchy or custom types.
+ * 
+ * @property {T[]} data - Array of execution items returned by the API.
+ *   This is always present, even if empty. Contains the actual execution item data
+ *   for the current page or the complete dataset if pagination is not used.
+ * 
+ * @property {number} total - Total count of execution items across all pages.
+ *   Always present to support pagination UI calculations. If pagination is not used,
+ *   this value equals data.length. Essential for displaying "Showing X of Y" messages
+ *   and calculating total page counts.
+ * 
+ * @property {number} [page] - Optional current page number (typically 1-indexed).
+ *   Present when the API implements page-based pagination. Omit this field when
+ *   returning all data without pagination or using cursor-based pagination.
+ * 
+ * @property {number} [limit] - Optional maximum number of items per page.
+ *   Present when the API implements pagination with configurable page sizes.
+ *   Also known as "perPage" or "pageSize" in some API designs. Omit when
+ *   pagination is not used.
+ * 
+ * @property {number} [totalPages] - Optional total number of pages available.
+ *   Calculated as Math.ceil(total / limit). Useful for pagination UI components
+ *   that display page numbers. Can be computed client-side from total and limit,
+ *   but including it reduces client-side calculations.
+ * 
+ * @property {boolean} [hasMore] - Optional flag indicating if more pages exist.
+ *   Useful for infinite scroll implementations and "Load More" buttons. When true,
+ *   indicates that additional data can be fetched. When false or undefined,
+ *   indicates the last page has been reached.
+ * 
+ * @example
+ * // Simple response without pagination - all execution items returned
+ * const allItemsResponse: ExecutionItemsApiResponse = {
+ *   data: [
+ *     {
+ *       id: 'exec-001',
+ *       name: 'Feature A',
+ *       owner: 'John Doe',
+ *       projectManager: 'Jane Smith',
+ *       health: 'on-track',
+ *       team: 'Squad 1'
+ *     },
+ *     {
+ *       id: 'exec-002',
+ *       name: 'Feature B',
+ *       owner: 'Alice Brown',
+ *       projectManager: 'Bob Wilson',
+ *       health: 'at-risk',
+ *       team: 'Squad 2'
+ *     }
+ *   ],
+ *   total: 2
+ * };
+ * 
+ * @example
+ * // Paginated response with page metadata - first page of many
+ * const paginatedResponse: ExecutionItemsApiResponse = {
+ *   data: [
+ *     {
+ *       id: 'exec-001',
+ *       name: 'Feature A',
+ *       owner: 'John Doe',
+ *       projectManager: 'Jane Smith',
+ *       health: 'on-track',
+ *       team: 'Squad 1'
+ *     },
+ *     {
+ *       id: 'exec-002',
+ *       name: 'Feature B',
+ *       owner: 'Alice Brown',
+ *       projectManager: 'Bob Wilson',
+ *       health: 'at-risk',
+ *       team: 'Squad 2'
+ *     }
+ *   ],
+ *   total: 47,
+ *   page: 1,
+ *   limit: 10,
+ *   totalPages: 5,
+ *   hasMore: true
+ * };
+ * 
+ * @example
+ * // Last page of paginated results
+ * const lastPageResponse: ExecutionItemsApiResponse = {
+ *   data: [
+ *     {
+ *       id: 'exec-047',
+ *       name: 'Feature Z',
+ *       owner: 'Charlie Green',
+ *       projectManager: 'Diana White',
+ *       health: 'off-track',
+ *       team: 'Squad 5'
+ *     }
+ *   ],
+ *   total: 47,
+ *   page: 5,
+ *   limit: 10,
+ *   totalPages: 5,
+ *   hasMore: false
+ * };
+ * 
+ * @example
+ * // Response with hierarchical OKRHierarchy data structure
+ * const hierarchicalResponse: ExecutionItemsApiResponse<OKRHierarchy> = {
+ *   data: [
+ *     {
+ *       id: 'obj-001',
+ *       name: 'Improve Platform Security',
+ *       owner: 'Security Lead',
+ *       projectManager: 'PM Alpha',
+ *       health: 'on-track',
+ *       team: 'Security Squad',
+ *       type: 'Objective',
+ *       keyResults: [
+ *         {
+ *           id: 'kr-001',
+ *           name: 'Implement 2FA',
+ *           owner: 'Auth Engineer',
+ *           projectManager: 'PM Alpha',
+ *           health: 'on-track',
+ *           team: 'Security Squad',
+ *           type: 'Key Result'
+ *         }
+ *       ]
+ *     }
+ *   ],
+ *   total: 1
+ * };
+ * 
+ * @example
+ * // Empty result set - no items found
+ * const emptyResponse: ExecutionItemsApiResponse = {
+ *   data: [],
+ *   total: 0
+ * };
+ * 
+ * @example
+ * // Infinite scroll pattern - using hasMore without page numbers
+ * const infiniteScrollResponse: ExecutionItemsApiResponse = {
+ *   data: [
+ *     {
+ *       id: 'exec-011',
+ *       name: 'Module K',
+ *       owner: 'Developer X',
+ *       projectManager: 'PM Gamma',
+ *       health: 'on-track',
+ *       team: 'Squad 3'
+ *     }
+ *   ],
+ *   total: 100,
+ *   limit: 10,
+ *   hasMore: true
+ * };
+ * 
+ * @example
+ * // Usage in an API client function
+ * async function fetchExecutionItems(
+ *   page?: number,
+ *   limit?: number
+ * ): Promise<ExecutionItemsApiResponse> {
+ *   const params = new URLSearchParams();
+ *   if (page) params.set('page', page.toString());
+ *   if (limit) params.set('limit', limit.toString());
+ *   
+ *   const response = await fetch(`/api/execution-items?${params}`);
+ *   return response.json();
+ * }
+ * 
+ * @example
+ * // Usage in a React component with pagination
+ * function ExecutionItemsList() {
+ *   const [response, setResponse] = useState<ExecutionItemsApiResponse | null>(null);
+ *   const [currentPage, setCurrentPage] = useState(1);
+ *   
+ *   useEffect(() => {
+ *     fetchExecutionItems(currentPage, 10).then(setResponse);
+ *   }, [currentPage]);
+ *   
+ *   if (!response) return <div>Loading...</div>;
+ *   
+ *   return (
+ *     <div>
+ *       <div>Showing {response.data.length} of {response.total} items</div>
+ *       {response.data.map(item => <ExecutionItemCard key={item.id} item={item} />)}
+ *       {response.hasMore && (
+ *         <button onClick={() => setCurrentPage(prev => prev + 1)}>
+ *           Load More
+ *         </button>
+ *       )}
+ *     </div>
+ *   );
+ * }
+ */
+export interface ExecutionItemsApiResponse<T extends ExecutionItem = ExecutionItem> {
+  data: T[];
+  total: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  hasMore?: boolean;
+}
